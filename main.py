@@ -320,6 +320,9 @@ class App:
             self.draw_matsuzawa((self.matsuzawa_pos,WINDOW_H//2-20), 
                                 rot=self.matsuzawa_rot)
             self.draw_bottles()
+        elif self.matsuzawa_state == "afterjet":
+            self.draw_matsuzawa((self.matsuzawa_pos,WINDOW_H//2-20), 
+                                rot=self.matsuzawa_rot)
     
     def draw_matsuzawa(self, pos, rot=0, scale=1):
         pyxel.blt(pos[0], pos[1],
