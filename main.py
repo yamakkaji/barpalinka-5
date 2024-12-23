@@ -252,6 +252,10 @@ class App:
                 else:
                     self.text_A = f"まつざわ の ジェット ふんしゃ！"
                 self.matsuzawa_state = "rotate"
+        
+        elif self.matsuzawa_state == "afterjet":
+            if time.time() - self.matsuzawa_time > 3:
+                self.matsuzawa_state = "takeorder"
 
         elif self.matsuzawa_state == "rotate":
             self.update_bottles()
@@ -260,13 +264,16 @@ class App:
             pyxel.play(3,3,loop=True)
             if self.matsuzawa_rot >= 360 * (3 - 1 + 2 ** self.matsuzawa_rot_level):
                 self.matsuzawa_rot = 0
-                self.matsuzawa_state = "takeorder"
                 self.matsuzawa_rot_level += 1
                 if self.matsuzawa_rot_level >= 10:
                     self.matsuzawa_rot_level = 1
                 pyxel.play(3,3,loop=False)
                 self.bottles_scale = 0
                 self.bottles_rot = 0
+
+                self.matsuzawa_state = "afterjet"
+                self.matsuzawa_time = time.time()
+                self.text_A = "かんな"
             
             if self.matsuzawa_rot >= 360 and self.matsuzawa_rot_level < 3:
                 self.text_A = "まつざわ は まわって いる"
