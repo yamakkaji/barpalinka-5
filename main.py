@@ -225,7 +225,7 @@ class App:
             pass
 
         elif self.matsuzawa_state == "takeorder":
-            self.text_A = "まつざわ 「なんに する かな」"
+            self.text_A = "まつざわ 「なん に するんな」"
             self.update_bottles()
             self.matsuzawa_time = time.time()
             self.matsuzawa_state = "takeorder_sleep"
@@ -241,11 +241,11 @@ class App:
         
         elif self.matsuzawa_state == "serve":
             self.update_bottles()
-            self.text_A = "・・・"
+            self.text_A = "まつざわ 「・・・」"
             if time.time() - self.matsuzawa_time > 3 and time.time() - self.matsuzawa_time <= 6:
-                self.text_A = "・・・ ・・・"
+                self.text_A = "まつざわ 「・・・ ・・・」"
             elif time.time() - self.matsuzawa_time > 6 and time.time() - self.matsuzawa_time <= 9:
-                self.text_A = "・・・ ・・・ ・・・！"
+                self.text_A = "まつざわ 「・・・ ・・・ ・・・！」"
             elif time.time() - self.matsuzawa_time > 9 and time.time() - self.matsuzawa_time <= 12:
                 if 2 ** self.matsuzawa_rot_level > 1:
                     self.text_A = f"まつざわ の {2 ** self.matsuzawa_rot_level}ばい ジェット ふんしゃ！"
@@ -265,15 +265,15 @@ class App:
             if self.matsuzawa_rot >= 360 * (3 - 1 + 2 ** self.matsuzawa_rot_level):
                 self.matsuzawa_rot = 0
                 self.matsuzawa_rot_level += 1
-                if self.matsuzawa_rot_level >= 10:
-                    self.matsuzawa_rot_level = 1
+                if self.matsuzawa_rot_level > 5:
+                    self.matsuzawa_rot_level = 0
                 pyxel.play(3,3,loop=False)
                 self.bottles_scale = 0
                 self.bottles_rot = 0
 
                 self.matsuzawa_state = "afterjet"
                 self.matsuzawa_time = time.time()
-                self.text_A = "かんな"
+                self.text_A = f"{self.matsuzawa_rot_level} しゅうねん！"
             
             if self.matsuzawa_rot >= 360 and self.matsuzawa_rot_level < 3:
                 self.text_A = "まつざわ は まわって いる"
