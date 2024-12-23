@@ -16,17 +16,38 @@ SCENE_TITLE = 0
 SCENE_DOOR = 1
 SCENE_BAR = 2
 
+def draw_text_with_border(x, y, s, col, bcol, font):
+    for dx in range(-1, 2):
+        for dy in range(-1, 2):
+            if dx != 0 or dy != 0:
+                pyxel.text(
+                    x + dx,
+                    y + dy,
+                    s,
+                    bcol,
+                    font,
+                )
+    pyxel.text(x, y, s, col, font)
+
 class App:
     def __init__(self):
         pyxel.init(WINDOW_W, WINDOW_H)
         pyxel.load("./assets/palinka5yrs.pyxres")
+
+        # Load fonts
+        self.umplus10 = pyxel.Font("assets/fonts/umplus_j10r.bdf")
+        self.umplus12 = pyxel.Font("assets/fonts/umplus_j12r.bdf")
+
         # pyxel.images[2].load(0, 0, "assets/images/BarPalinkaCounter_w256.png")
         self.scene = SCENE_TITLE
         self.music_on = False
         self.time_start = None
 
         self.logo_scale = 0
-        self.counter_pos = 260
+
+        self.counter_pos = 0 #260
+        self.counter_scale = 0
+
         self.matsuzawa_pos = -100
 
         self.matsuzawa_first_move = False
@@ -56,9 +77,25 @@ class App:
                     1, 
                     16,8, 63,63, 
                     11)
-            pyxel.text(WINDOW_W//2 - 50, WINDOW_H//2 - 4, 
-                       "CAUTION\n Sound will be played\n \nENTER or CLICK", 
+            pyxel.text(WINDOW_W//2-50, WINDOW_H//2-4, 
+                       "THIS CONTENT CONTAINS\nSOUND EFFECTS\n\nENTER OR CLICK TO CONTINUE", 
                        pyxel.COLOR_WHITE)
+            # draw_text_with_border(WINDOW_W//2-70,WINDOW_H//2,
+            #                       "CAUTION:", 
+            #                       7, 0, 
+            #                       self.umplus12)
+            # draw_text_with_border(WINDOW_W//2-70,WINDOW_H//2+15,
+            #                       "This content contains", 
+            #                       7, 0, 
+            #                       self.umplus12)
+            # draw_text_with_border(WINDOW_W//2-70,WINDOW_H//2+30,
+            #                       "sound effects", 
+            #                       7, 0, 
+            #                       self.umplus12)
+            # draw_text_with_border(WINDOW_W//2-70,WINDOW_H//2+55,
+            #                       "ENTER or CLICK to continue", 
+            #                       7, 0, 
+            #                       self.umplus12)
             
         elif self.scene == SCENE_DOOR:
             pyxel.cls(0)
@@ -106,40 +143,44 @@ class App:
         pyxel.blt(self.counter_pos,WINDOW_H//2-(87-24) + 25, 
                   0, 
                   0,24, 256,87-24, 
-                  0, 0, scale=1)
+                  0, 0, scale=self.counter_scale)
         if time.time() - self.time_start <= logo_end_time:
             self.draw_bar_logo(scale=1)
-        if self.counter_pos > 0:
-            self.counter_pos -= 0.5
+        # if self.counter_pos > 0:
+        #     self.counter_pos -= 0.5
+        if self.counter_scale < 1:
+            self.counter_scale += 0.001
 
     def draw_bar_counter(self):
-        logo_end_time = 30
+        logo_end_time = 33
         if self.time_start is None:
             self.time_start = time.time()
 
         pyxel.blt(self.counter_pos,WINDOW_H//2 + 25, 
                   0, 
                   0,88, 256,112-88, 
-                  0, 0, scale=1)
+                  0, 0, scale=self.counter_scale)
         if time.time() - self.time_start <= logo_end_time:
             self.draw_bar_logo(scale=1)
-        if self.counter_pos > 0:
-            self.counter_pos -= 0.5
+        # if self.counter_pos > 0:
+        #     self.counter_pos -= 0.5
+        if self.counter_scale < 1:
+            self.counter_scale += 0.001
     
     def draw_matsuzawa(self):
         target_pos = WINDOW_W//2 - (63-16)//2
 
-        if self.counter_pos <= 0 and not self.matsuzawa_first_move:
-            pyxel.blt(self.matsuzawa_pos,WINDOW_H//2-20,
-                      1, 
-                      16,8, 71-16,63-8, 
-                      11)
-            if self.matsuzawa_pos < target_pos:
-                self.matsuzawa_pos += 0.5
-            else:
-                self.matsuzawa_first_move = True
-        
-        if self.matsuzawa_first_move:
+        if not self.matsuzawa_first_move:
+            if self.counter_pos <= 0 and self.counter_scale >= 1:
+                pyxel.blt(self.matsuzawa_pos,WINDOW_H//2-20,
+                        1, 
+                        16,8, 71-16,63-8, 
+                        11)
+                if self.matsuzawa_pos < target_pos:
+                    self.matsuzawa_pos += 0.5
+                else:
+                    self.matsuzawa_first_move = True
+        elif self.matsuzawa_first_move:
             pyxel.blt(self.matsuzawa_pos,WINDOW_H//2-20,
                       1, 
                       16,8, 71-16,63-8, 
