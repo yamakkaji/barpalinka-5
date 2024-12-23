@@ -49,15 +49,23 @@ class App:
         self.scene = SCENE_TITLE
         self.music_on = False
         self.time_start = None
+        self.text_A = None
 
         self.logo_scale = 0
 
         self.counter_pos = 0 #260
         self.counter_scale = 0
+        self.counter_scale_step = 0.2 #0.001
 
+        self.matsuzawa_time = 0
         self.matsuzawa_pos = -100
-        self.matsuzawa_first_move = False
+        # self.matsuzawa_pos_vert = 0
+        self.matsuzawa_pos_step = 10 # 0.3
+        self.matsuzawa_state = "inback_wait"
         self.matsuzawa_rot = 0
+        self.matsuzawa_rot_level = 0
+
+        self.visitor_state = 0
 
         self.bottles_scale = 0
         self.bottles_rot = 0
@@ -71,14 +79,18 @@ class App:
 
         if self.scene == SCENE_TITLE:
             self.update_title_scene()
+
         elif self.scene == SCENE_DOOR:
             if not self.music_on:
                 self.music_on = True
                 pyxel.playm(BGM, loop=True)
             self.update_snow()
             self.update_door_scene()
+
         elif self.scene == SCENE_BAR:
             self.update_bar_scene()
+            self.update_matsuzawa()
+            self.update_visitor()
 
     def draw(self):
         if self.scene == SCENE_TITLE:
@@ -110,14 +122,23 @@ class App:
             pyxel.cls(0)
             self.draw_bar_logo(scale=self.logo_scale)
             self.draw_snow()
+            if self.text_A is not None:
+                draw_text_with_border(WINDOW_W//2-70,WINDOW_H-40,
+                                    self.text_A, 
+                                    7, 0, 
+                                    self.umplus12)
         
         elif self.scene == SCENE_BAR:
             pyxel.cls(0)
             self.draw_bar_wall()
-            self.draw_matsuzawa()
+            self.draw_matsuzawa_turn()
             self.draw_bar_counter()
-
             self.draw_snow()
+            if self.text_A is not None:
+                draw_text_with_border(20,WINDOW_H-40,
+                                    self.text_A, 
+                                    7, 0, 
+                                    self.umplus12)
 
     def update_title_scene(self):
         if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT) or pyxel.btnp(pyxel.KEY_KP_ENTER):
@@ -159,7 +180,7 @@ class App:
         # if self.counter_pos > 0:
         #     self.counter_pos -= 0.5
         if self.counter_scale < 1:
-            self.counter_scale += 0.001
+            self.counter_scale += self.counter_scale_step
 
     def draw_bar_counter(self):
         logo_end_time = 33
@@ -175,45 +196,145 @@ class App:
         # if self.counter_pos > 0:
         #     self.counter_pos -= 0.5
         if self.counter_scale < 1:
-            self.counter_scale += 0.001
+            self.counter_scale += self.counter_scale_step
     
-    def draw_matsuzawa(self):
+    def update_matsuzawa(self):
         target_pos = WINDOW_W//2 - (63-16)//2
 
-        if not self.matsuzawa_first_move:
+        if self.matsuzawa_state == "inback_wait":
+            self.matsuzawa_time = time.time()
             if self.counter_pos <= 0 and self.counter_scale >= 1:
-                pyxel.blt(self.matsuzawa_pos,WINDOW_H//2-20,
-                        1, 
-                        16,8, 71-16,63-8, 
-                        11)
-                if self.matsuzawa_pos < target_pos:
-                    self.matsuzawa_pos += 0.5
+                self.matsuzawa_state = "arrive"
+
+        elif self.matsuzawa_state == "arrive":
+            if self.matsuzawa_pos < target_pos:
+                self.matsuzawa_pos += self.matsuzawa_pos_step
+            else:
+                self.matsuzawa_pos = target_pos
+                self.matsuzawa_state = "welcome"
+
+        elif self.matsuzawa_state == "welcome":
+            self.text_A = "まつざわ 「はれ、おあがりて」"
+            self.matsuzawa_time = time.time()
+            self.matsuzawa_state = "welcome_sleep"
+        
+        elif self.matsuzawa_state == "welcome_sleep":
+            if time.time() - self.matsuzawa_time > 0:
+                self.matsuzawa_state = "welcome_wait"
+        
+        elif self.matsuzawa_state == "welcome_wait":
+            pass
+
+        elif self.matsuzawa_state == "takeorder":
+            self.text_A = "まつざわ 「なんに する かな」"
+            self.update_bottles()
+            self.matsuzawa_time = time.time()
+            self.matsuzawa_state = "takeorder_sleep"
+
+        elif self.matsuzawa_state == "takeorder_sleep":
+            self.update_bottles()
+            if time.time() - self.matsuzawa_time > 0:
+                self.matsuzawa_state = "takeorder_wait"
+        
+        elif self.matsuzawa_state == "takeorder_wait":
+            self.update_bottles()
+            self.matsuzawa_time = time.time()
+        
+        elif self.matsuzawa_state == "serve":
+            self.update_bottles()
+            self.text_A = "・・・"
+            if time.time() - self.matsuzawa_time > 3 and time.time() - self.matsuzawa_time <= 6:
+                self.text_A = "・・・ ・・・"
+            elif time.time() - self.matsuzawa_time > 6 and time.time() - self.matsuzawa_time <= 9:
+                self.text_A = "・・・ ・・・ ・・・！"
+            elif time.time() - self.matsuzawa_time > 9 and time.time() - self.matsuzawa_time <= 12:
+                if 2 ** self.matsuzawa_rot_level > 1:
+                    self.text_A = f"まつざわ の {2 ** self.matsuzawa_rot_level}ばい ジェット ふんしゃ！"
                 else:
-                    self.matsuzawa_first_move = True
-        elif self.matsuzawa_first_move:
-            pyxel.blt(self.matsuzawa_pos,WINDOW_H//2-20,
-                      1, 
-                      16,8, 71-16,63-8, 
-                      11, rotate=self.matsuzawa_rot)  
-            self.matsuzawa_rot += 0.5
-            if self.matsuzawa_rot >= 360:
+                    self.text_A = f"まつざわ の ジェット ふんしゃ！"
+                self.matsuzawa_state = "rotate"
+
+        elif self.matsuzawa_state == "rotate":
+            self.update_bottles()
+            # self.matsuzawa_rot_state = self.matsuzawa_rot_param * self.matsuzawa_rot_state * (1 - self.matsuzawa_rot_state)
+            self.matsuzawa_rot += 2 ** self.matsuzawa_rot_level
+            pyxel.play(3,3,loop=True)
+            if self.matsuzawa_rot >= 360 * (3 - 1 + 2 ** self.matsuzawa_rot_level):
                 self.matsuzawa_rot = 0
-
-            self.draw_bottle(MTBD, (WINDOW_W//2-70, WINDOW_H//4), self.bottles_rot, self.bottles_scale)
-            self.draw_bottle(GRANDMONTE, (WINDOW_W//2-35, WINDOW_H//4), self.bottles_rot, self.bottles_scale)
-            self.draw_bottle(FRAULEIN, (WINDOW_W//2+5, WINDOW_H//4), self.bottles_rot, self.bottles_scale)
-            self.draw_bottle(IRSAI, (WINDOW_W//2+40, WINDOW_H//4), self.bottles_rot, self.bottles_scale)
-            if self.bottles_scale < 1:
-                self.bottles_scale += 0.001
-            self.bottles_rot += 0.5
-            if self.bottles_rot >= 360:
+                self.matsuzawa_state = "takeorder"
+                self.matsuzawa_rot_level += 1
+                if self.matsuzawa_rot_level >= 10:
+                    self.matsuzawa_rot_level = 1
+                pyxel.play(3,3,loop=False)
+                self.bottles_scale = 0
                 self.bottles_rot = 0
+            
+            if self.matsuzawa_rot >= 360 and self.matsuzawa_rot_level < 3:
+                self.text_A = "まつざわ は まわって いる"
 
-            if self.bottles_scale >= 1:
-                draw_text_with_border(WINDOW_W//2-70,WINDOW_H-40,
-                                    "まつざわ は まわって いる", 
-                                    7, 0, 
-                                    self.umplus12)
+    def update_visitor(self):
+        if self.visitor_state == 0:
+            if self.matsuzawa_state == "welcome_wait":
+                if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
+                    self.matsuzawa_state = "takeorder"
+            if self.matsuzawa_state == "takeorder_wait":
+                if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
+                    # self.text_A = "まつざわ は まわる じゅんび を はじめた"
+                    self.matsuzawa_state = "serve"
+
+    
+    def draw_matsuzawa_turn(self):
+        if self.matsuzawa_state == "inback_wait":
+            self.draw_matsuzawa((self.matsuzawa_pos,WINDOW_H//2-20))
+        elif self.matsuzawa_state == "arrive":
+            self.draw_matsuzawa((self.matsuzawa_pos,WINDOW_H//2-20))
+        elif self.matsuzawa_state == "welcome":
+            self.draw_matsuzawa((self.matsuzawa_pos,WINDOW_H//2-20))
+        elif self.matsuzawa_state == "welcome":
+            self.draw_matsuzawa((self.matsuzawa_pos,WINDOW_H//2-20))
+        elif self.matsuzawa_state == "welcome_sleep":
+            self.draw_matsuzawa((self.matsuzawa_pos,WINDOW_H//2-20))
+        elif self.matsuzawa_state == "welcome_wait":
+            self.draw_matsuzawa((self.matsuzawa_pos,WINDOW_H//2-20))
+
+        elif self.matsuzawa_state == "takeorder":
+            self.draw_matsuzawa((self.matsuzawa_pos,WINDOW_H//2-20))
+            self.draw_bottles()
+        elif self.matsuzawa_state == "takeorder_sleep":
+            self.draw_matsuzawa((self.matsuzawa_pos,WINDOW_H//2-20))
+            self.draw_bottles()
+        elif self.matsuzawa_state == "takeorder_wait":
+            self.draw_matsuzawa((self.matsuzawa_pos,WINDOW_H//2-20))
+            self.draw_bottles()
+        elif self.matsuzawa_state == "serve":
+            self.draw_matsuzawa((self.matsuzawa_pos,WINDOW_H//2-20), 
+                                rot=self.matsuzawa_rot)
+            self.draw_bottles()
+        elif self.matsuzawa_state == "rotate":
+            self.draw_matsuzawa((self.matsuzawa_pos,WINDOW_H//2-20), 
+                                rot=self.matsuzawa_rot)
+            self.draw_bottles()
+    
+    def draw_matsuzawa(self, pos, rot=0, scale=1):
+        pyxel.blt(pos[0], pos[1],
+                  1, 
+                  16,8, 
+                  71-16,63-8, 
+                  11,
+                  rotate=rot, scale=scale)
+    
+    def update_bottles(self):
+        if self.bottles_scale < 1:
+            self.bottles_scale += 0.01
+        self.bottles_rot += 5
+        if self.bottles_rot >= 360:
+            self.bottles_rot = 0
+
+    def draw_bottles(self):
+        self.draw_bottle(MTBD, (WINDOW_W//2-70, WINDOW_H//4), self.bottles_rot, self.bottles_scale)
+        self.draw_bottle(GRANDMONTE, (WINDOW_W//2-35, WINDOW_H//4), self.bottles_rot, self.bottles_scale)
+        self.draw_bottle(FRAULEIN, (WINDOW_W//2+5, WINDOW_H//4), self.bottles_rot, self.bottles_scale)
+        self.draw_bottle(IRSAI, (WINDOW_W//2+40, WINDOW_H//4), self.bottles_rot, self.bottles_scale)
 
     def draw_bottle(self, brand, pos, rot, scale):
         pyxel.blt(pos[0], pos[1],
