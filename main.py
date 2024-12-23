@@ -53,14 +53,13 @@ class App:
 
         self.logo_scale = 0
 
-        self.counter_pos = 0 #260
+        self.counter_pos = 0
         self.counter_scale = 0
-        self.counter_scale_step = 0.2 #0.001
+        self.counter_scale_step = 0.001
 
         self.matsuzawa_time = 0
         self.matsuzawa_pos = -100
-        # self.matsuzawa_pos_vert = 0
-        self.matsuzawa_pos_step = 10 # 0.3
+        self.matsuzawa_pos_step = 0.3
         self.matsuzawa_state = "inback_wait"
         self.matsuzawa_rot = 0
         self.matsuzawa_rot_level = 0
