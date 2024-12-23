@@ -82,12 +82,12 @@ class App:
 
     def draw(self):
         if self.scene == SCENE_TITLE:
-            pyxel.blt(WINDOW_W//2 - (63-16)//2,WINDOW_H//2-30,
+            pyxel.blt(WINDOW_W//2 + (63-16) - 15,WINDOW_H//2-30,
                     1, 
                     16,8, 63,63, 
                     11)
             pyxel.text(WINDOW_W//2-50, WINDOW_H//2-4, 
-                       "THIS CONTENT CONTAINS\nSOUND EFFECTS\n\nENTER OR CLICK TO CONTINUE", 
+                       "THIS CONTENT CONTAINS\nSOUND EFFECTS.\nMAY NOT WORK ON SAFARI.\n\nENTER OR CLICK TO CONTINUE", 
                        pyxel.COLOR_WHITE)
             # draw_text_with_border(WINDOW_W//2-70,WINDOW_H//2,
             #                       "CAUTION:", 
