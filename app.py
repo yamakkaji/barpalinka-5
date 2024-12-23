@@ -10,6 +10,13 @@ WINDOW_W = int(WINDOW_SCALE * WINDOW_ASPECT)
 
 LETTER_SHI = (0, 0, 100, 9)
 
+# BOTTLE_BRANDS
+MTBD = (16, 72, 30, 30)
+IRSAI = (48, 72, 30, 30)
+FRAULEIN = (16, 104, 30, 30)
+GRANDMONTE = (48, 104, 30, 30)
+
+
 BGM = 0
 
 SCENE_TITLE = 0
@@ -49,9 +56,11 @@ class App:
         self.counter_scale = 0
 
         self.matsuzawa_pos = -100
-
         self.matsuzawa_first_move = False
         self.matsuzawa_rot = 0
+
+        self.bottles_scale = 0
+        self.bottles_rot = 0
 
         self.snowflakes = [[np.random.randint(0, WINDOW_W), np.random.randint(0, WINDOW_H)] for _ in range(100)]
         
@@ -107,6 +116,7 @@ class App:
             self.draw_bar_wall()
             self.draw_matsuzawa()
             self.draw_bar_counter()
+
             self.draw_snow()
 
     def update_title_scene(self):
@@ -185,7 +195,31 @@ class App:
                       1, 
                       16,8, 71-16,63-8, 
                       11, rotate=self.matsuzawa_rot)  
-            self.matsuzawa_rot += 0.5       
+            self.matsuzawa_rot += 0.5
+            if self.matsuzawa_rot >= 360:
+                self.matsuzawa_rot = 0
+
+            self.draw_bottle(MTBD, (WINDOW_W//2-70, WINDOW_H//4), self.bottles_rot, self.bottles_scale)
+            self.draw_bottle(GRANDMONTE, (WINDOW_W//2-35, WINDOW_H//4), self.bottles_rot, self.bottles_scale)
+            self.draw_bottle(FRAULEIN, (WINDOW_W//2+5, WINDOW_H//4), self.bottles_rot, self.bottles_scale)
+            self.draw_bottle(IRSAI, (WINDOW_W//2+40, WINDOW_H//4), self.bottles_rot, self.bottles_scale)
+            if self.bottles_scale < 1:
+                self.bottles_scale += 0.001
+            self.bottles_rot += 0.5
+            if self.bottles_rot >= 360:
+                self.bottles_rot = 0
+
+            if self.bottles_scale >= 1:
+                draw_text_with_border(WINDOW_W//2-70,WINDOW_H-40,
+                                    "まつざわ は まわって いる", 
+                                    7, 0, 
+                                    self.umplus12)
+
+    def draw_bottle(self, brand, pos, rot, scale):
+        pyxel.blt(pos[0], pos[1],
+                  1, 
+                  *brand, 
+                  0, rotate=rot, scale=scale)     
     
     def update_snow(self):
         for flake in self.snowflakes:
